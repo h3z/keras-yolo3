@@ -8,11 +8,9 @@ import os
 from timeit import default_timer as timer
 
 import numpy as np
-
 from PIL import Image, ImageFont, ImageDraw
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import multi_gpu_model
 
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import letterbox_image
@@ -37,12 +35,20 @@ class YOLO(object):
             return "Unrecognized attribute name '" + n + "'"
 
     def __init__(self, **kwargs):
-        self.__dict__.update(self._defaults)  # set up default values
+        self.model_path = 'model_data/yolo.h5'
+        self.anchors_path = 'model_data/yolo_anchors.txt'
+        self.classes_path = 'model_data/coco_classes.txt'
+        self.score = 0.3
+        self.iou = 0.45
+        self.model_image_size = (416, 416)
+        self.gpu_num = 1
+
         self.__dict__.update(kwargs)  # and update with user overrides
         self.class_names = self._get_class()
         self.anchors = self._get_anchors()
-        self.sess = K.get_session()
-        self.boxes, self.scores, self.classes = self.generate()
+        # self.sess = K.get_session()
+        # self.boxes, self.scores, self.classes = self.generate()
+        self.generate()
 
     def _get_class(self):
         classes_path = os.path.expanduser(self.classes_path)
@@ -91,13 +97,13 @@ class YOLO(object):
         np.random.seed(None)  # Reset seed to default.
 
         # Generate output tensor targets for filtered bounding boxes.
-        self.input_image_shape = K.placeholder(shape=(2,))
-        if self.gpu_num >= 2:
-            self.yolo_model = multi_gpu_model(self.yolo_model, gpus=self.gpu_num)
-        boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
-                                           len(self.class_names), self.input_image_shape,
-                                           score_threshold=self.score, iou_threshold=self.iou)
-        return boxes, scores, classes
+        # self.input_image_shape = K.placeholder(shape=(2,))
+        # if self.gpu_num >= 2:
+        #     self.yolo_model = multi_gpu_model(self.yolo_model, gpus=self.gpu_num)
+        # boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
+        #                                    len(self.class_names), self.input_image_shape,
+        #                                    score_threshold=self.score, iou_threshold=self.iou)
+        # return boxes, scores, classes
 
     def detect_image(self, image):
         start = timer()
@@ -116,13 +122,18 @@ class YOLO(object):
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
 
-        out_boxes, out_scores, out_classes = self.sess.run(
-            [self.boxes, self.scores, self.classes],
-            feed_dict={
-                self.yolo_model.input: image_data,
-                self.input_image_shape: [image.size[1], image.size[0]],
-                K.learning_phase(): 0
-            })
+        # out_boxes, out_scores, out_classes = self.sess.run(
+        #     [self.boxes, self.scores, self.classes],
+        #     feed_dict={
+        #         self.yolo_model.input: image_data,
+        #         self.input_image_shape: [image.size[1], image.size[0]],
+        #         K.learning_phase(): 0
+        #     })
+
+        output = self.yolo_model.predict(image_data)
+        out_boxes, out_scores, out_classes = yolo_eval(output, self.anchors,
+                                                       len(self.class_names), [image.size[1], image.size[0]],
+                                                       score_threshold=self.score, iou_threshold=self.iou)
 
         print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
@@ -166,9 +177,6 @@ class YOLO(object):
         print(end - start)
         return image
 
-    def close_session(self):
-        self.sess.close()
-
 
 def detect_video(yolo, video_path, output_path=""):
     import cv2
@@ -180,9 +188,7 @@ def detect_video(yolo, video_path, output_path=""):
     video_size = (int(vid.get(cv2.CAP_PROP_FRAME_WIDTH)),
                   int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     isOutput = True if output_path != "" else False
-    if isOutput:
-        print("!!! TYPE:", type(output_path), type(video_FourCC), type(video_fps), type(video_size))
-        out = cv2.VideoWriter(output_path, video_FourCC, video_fps, video_size)
+    out = None
     accum_time = 0
     curr_fps = 0
     fps = "FPS: ??"
@@ -206,6 +212,9 @@ def detect_video(yolo, video_path, output_path=""):
         cv2.namedWindow("result", cv2.WINDOW_NORMAL)
         cv2.imshow("result", result)
         if isOutput:
+            if not out:
+                print("!!! TYPE:", type(output_path), type(video_FourCC), type(video_fps), type(video_size))
+                out = cv2.VideoWriter(output_path, video_FourCC, video_fps, video_size)
             out.write(result)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
