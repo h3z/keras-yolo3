@@ -331,6 +331,7 @@ def box_iou(b1, b2):
     b1_maxes = b1_xy + b1_wh_half
 
     # Expand dim to apply broadcasting.
+    # TODO 去掉这行应该也行吧
     b2 = K.expand_dims(b2, 0)
     b2_xy = b2[..., :2]
     b2_wh = b2[..., 2:4]
@@ -384,6 +385,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
         pred_box = K.concatenate([pred_xy, pred_wh])
 
         # Darknet raw box to calculate loss.
+        # TODO 这个xy的式子应该不太对
         raw_true_xy = y_true[l][..., :2] * grid_shapes[l][::-1] - grid
         raw_true_wh = K.log(y_true[l][..., 2:4] / anchors[anchor_mask[l]] * input_shape[::-1])
         raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh))  # avoid log(0)=-inf
@@ -400,11 +402,13 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
             ignore_mask = ignore_mask.write(b, K.cast(best_iou < ignore_thresh, K.dtype(true_box)))
             return b + 1, ignore_mask
 
+        # TODO 改改看
         _, ignore_mask = K.control_flow_ops.while_loop(lambda b, *args: b < m, loop_body, [0, ignore_mask])
         ignore_mask = ignore_mask.stack()
         ignore_mask = K.expand_dims(ignore_mask, -1)
 
         # K.binary_crossentropy is helpful to avoid exp overflow.
+        # TODO 系数可以放到求和完后再求，减少计算量
         xy_loss = object_mask * box_loss_scale * K.binary_crossentropy(raw_true_xy, raw_pred[..., 0:2],
                                                                        from_logits=True)
         wh_loss = object_mask * box_loss_scale * 0.5 * K.square(raw_true_wh - raw_pred[..., 2:4])
