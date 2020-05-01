@@ -4,7 +4,7 @@ Retrain the YOLO model for your own dataset.
 import os
 
 import numpy as np
-import tensorflow.keras.backend as K
+
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.layers import Input, Lambda
 from tensorflow.keras.models import Model

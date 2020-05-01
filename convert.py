@@ -11,7 +11,6 @@ import os
 from collections import defaultdict
 
 import numpy as np
-from tensorflow.keras import backend as K
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import (Conv2D, Input, ZeroPadding2D, Add,
                                      UpSampling2D, MaxPooling2D, Concatenate)
