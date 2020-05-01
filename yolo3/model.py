@@ -33,6 +33,7 @@ def DarknetConv2D_BN_Leaky(*args, **kwargs):
         LeakyReLU(alpha=0.1))
 
 
+# TODO res应该是加在activation之前的
 def resblock_body(x, num_filters, num_blocks):
     """A series of resblocks starting with a downsampling Convolution2D"""
     # Darknet uses left and top padding instead of 'same' mode
@@ -42,6 +43,7 @@ def resblock_body(x, num_filters, num_blocks):
         y = compose(
             DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
             DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+        # TODO 最后一个连接点应该在全局保存以下，后边concatenate会用，84行附近那里有个layers[152]
         x = Add()([x, y])
     return x
 
