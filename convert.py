@@ -9,7 +9,7 @@ import configparser
 import io
 import os
 from collections import defaultdict
-
+from tensorflow.keras import backend as K
 import numpy as np
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import (Conv2D, Input, ZeroPadding2D, Add,
