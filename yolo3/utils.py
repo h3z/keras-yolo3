@@ -14,6 +14,7 @@ def compose(*funcs):
     """
     # return lambda x: reduce(lambda v, f: f(v), funcs, x)
     if funcs:
+        # TODO 我觉得这里直接这样就行：reduce(lambda f, g: g(f), funcs)
         return reduce(lambda f, g: lambda *a, **kw: g(f(*a, **kw)), funcs)
     else:
         raise ValueError('Composition of empty sequence not supported.')
