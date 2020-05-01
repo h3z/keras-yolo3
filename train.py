@@ -3,7 +3,6 @@ Retrain the YOLO model for your own dataset.
 """
 
 import numpy as np
-import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.layers import Input, Lambda
 from tensorflow.keras.models import Model
@@ -51,6 +50,7 @@ def _main():
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     if True:
+        # TODO 这个loss写法看不懂
         model.compile(optimizer=Adam(lr=1e-3), loss={
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
