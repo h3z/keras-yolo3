@@ -2,8 +2,8 @@
 
 from functools import reduce
 
-from PIL import Image
 import numpy as np
+from PIL import Image
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 
 

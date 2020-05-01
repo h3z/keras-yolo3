@@ -5,9 +5,9 @@ from functools import wraps
 import numpy as np
 import tensorflow as tf
 import tensorflow.python.keras.backend as K
+from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D
 from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 

@@ -12,10 +12,10 @@ from collections import defaultdict
 
 import numpy as np
 from tensorflow.keras import backend as K
+from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import (Conv2D, Input, ZeroPadding2D, Add,
                                      UpSampling2D, MaxPooling2D, Concatenate)
 from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import plot_model as plot
