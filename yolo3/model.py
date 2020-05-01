@@ -133,18 +133,18 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     anchors_tensor = tf.reshape(tf.constant(anchors), [1, 1, 1, num_anchors, 2])
 
     grid_shape = tf.shape(feats)[1:3]  # height, width
-    grid_y = tf.tile(tf.reshape(tf.range(0, stop=grid_shape[0]), [-1, 1, 1, 1]),
+    grid_y = tf.tile(tf.reshape(tf.range(0, limit=grid_shape[0]), [-1, 1, 1, 1]),
                      [1, grid_shape[1], 1, 1])
-    grid_x = tf.tile(tf.reshape(tf.range(0, stop=grid_shape[1]), [1, -1, 1, 1]),
+    grid_x = tf.tile(tf.reshape(tf.range(0, limit=grid_shape[1]), [1, -1, 1, 1]),
                      [grid_shape[0], 1, 1, 1])
-    grid = tf.concat([grid_x, grid_y])
+    grid = tf.concat([grid_x, grid_y], axis=-1)
     grid = tf.cast(grid, feats.dtype)
 
     feats = tf.reshape(
         feats, [-1, grid_shape[0], grid_shape[1], num_anchors, num_classes + 5])
 
     # Adjust preditions to each spatial grid point and anchor size.
-    box_xy = (tf.sigmoid(feats[..., :2]) + grid) / tf.cast(grid_shape[::-1], feats.dtyp)
+    box_xy = (tf.sigmoid(feats[..., :2]) + grid) / tf.cast(grid_shape[::-1], feats.dtype)
     box_wh = tf.exp(feats[..., 2:4]) * anchors_tensor / tf.cast(input_shape[::-1], feats.dtype)
     box_confidence = tf.sigmoid(feats[..., 4:5])
     box_class_probs = tf.sigmoid(feats[..., 5:])
@@ -160,7 +160,7 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape):
     box_hw = box_wh[..., ::-1]
     input_shape = tf.cast(input_shape, box_yx.dtype)
     image_shape = tf.cast(image_shape, box_yx.dtype)
-    new_shape = tf.round(image_shape * tf.min(input_shape / image_shape))
+    new_shape = tf.round(image_shape * tf.reduce_min(input_shape / image_shape))
     offset = (input_shape - new_shape) / 2. / input_shape
     scale = input_shape / new_shape
     box_yx = (box_yx - offset) * scale
@@ -173,10 +173,10 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape):
         box_mins[..., 1:2],  # x_min
         box_maxes[..., 0:1],  # y_max
         box_maxes[..., 1:2]  # x_max
-    ])
+    ], axis=-1)
 
     # Scale boxes back to original image shape.
-    boxes *= tf.concat([image_shape, image_shape])
+    boxes *= tf.concat([image_shape, image_shape], axis=-1)
     return boxes
 
 
@@ -382,7 +382,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
 
         grid, raw_pred, pred_xy, pred_wh = yolo_head(yolo_outputs[l],
                                                      anchors[anchor_mask[l]], num_classes, input_shape, calc_loss=True)
-        pred_box = tf.concat([pred_xy, pred_wh])
+        pred_box = tf.concat([pred_xy, pred_wh], axis=-1)
 
         # Darknet raw box to calculate loss.
         # TODO 这个xy的式子应该不太对

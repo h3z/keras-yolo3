@@ -103,7 +103,8 @@ def get_anchors(anchors_path):
     with open(anchors_path) as f:
         anchors = f.readline()
     anchors = [float(x) for x in anchors.split(',')]
-    return np.array(anchors).reshape(-1, 2)
+
+    return np.array(anchors, dtype='f').reshape(-1, 2)
 
 
 def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
