@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D
 from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.losses import binary_crossentropy
+from tensorflow.keras.backend import binary_crossentropy
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 
@@ -388,7 +388,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
         # TODO 这个xy的式子应该不太对
         raw_true_xy = y_true[l][..., :2] * grid_shapes[l][::-1] - grid
         raw_true_wh = tf.math.log(y_true[l][..., 2:4] / anchors[anchor_mask[l]] * input_shape[::-1])
-        raw_true_wh = tf.where(tf.math.is_inf(raw_true_wh), 0, raw_true_wh)  # avoid log(0)=-inf
+        raw_true_wh = tf.where(tf.math.is_inf(raw_true_wh), 0., raw_true_wh)  # avoid log(0)=-inf
         box_loss_scale = 2 - y_true[l][..., 2:3] * y_true[l][..., 3:4]
 
         # Find ignore mask, iterate over each of batch.

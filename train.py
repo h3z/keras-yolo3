@@ -3,6 +3,7 @@ Retrain the YOLO model for your own dataset.
 """
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.layers import Input, Lambda
 from tensorflow.keras.models import Model
@@ -192,7 +193,8 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
 
 def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes):
     n = len(annotation_lines)
-    if n == 0 or batch_size <= 0: return None
+    if n == 0 or batch_size <= 0:
+        return None
     return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes)
 
 
