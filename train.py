@@ -51,9 +51,7 @@ def _main():
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     if True:
-        model.compile(optimizer=Adam(lr=1e-3), loss={
-            # use custom yolo_loss Lambda layer.
-            'yolo_loss': lambda y_true, y_pred: y_pred})
+        model.compile(optimizer=Adam(lr=1e-3), loss=lambda y_true, y_pred: y_pred)
 
         batch_size = 32
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
@@ -135,6 +133,7 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
     model_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
                         arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
         [*model_body.output, *y_true])
+    model_loss = tf.reshape(model_loss, [1])
     model = Model([model_body.input, *y_true], model_loss)
 
     return model
