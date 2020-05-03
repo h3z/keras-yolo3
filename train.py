@@ -70,8 +70,7 @@ def _main():
     if True:
         for i in range(len(model.layers)):
             model.layers[i].trainable = True
-        model.compile(optimizer=Adam(lr=1e-4),
-                      loss={'yolo_loss': lambda y_true, y_pred: y_pred})  # recompile to apply the change
+        model.compile(optimizer=Adam(lr=1e-4), loss=lambda y_true, y_pred: y_pred)  # recompile to apply the change
         print('Unfreeze all of the layers.')
 
         batch_size = 32  # note that more GPU memory is required after unfreezing the body
@@ -159,7 +158,8 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
         if freeze_body in [1, 2]:
             # Freeze the darknet body or freeze all but 2 output layers.
             num = (20, len(model_body.layers) - 2)[freeze_body - 1]
-            for i in range(num): model_body.layers[i].trainable = False
+            for i in range(num):
+                model_body.layers[i].trainable = False
             print('Freeze the first {} layers of total {} layers.'.format(num, len(model_body.layers)))
 
     model_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
